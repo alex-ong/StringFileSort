@@ -71,11 +71,14 @@ def merge_sorted(char, numProcs):
     for file in files:
         currentCmp.append(file.readline().strip())
         
+    # store a pointer to each file. add smallest element of the four files
+    # then push pointer forward. Do this till files are exhausted.
     while len(files) > 0:        
-        minimum = min(currentCmp)
+        minimum = min(currentCmp) #grab smallest string
         index = currentCmp.index(minimum)
-        final.write(minimum + '\n')
+        final.write(minimum + '\n') #write out string
         
+        # increment string pointers
         newValue = files[index].readline()
         if not newValue:
             files[index].close()
@@ -83,7 +86,7 @@ def merge_sorted(char, numProcs):
             del currentCmp[index]
         else:
             currentCmp[index] = newValue.strip()
-    
+    # delete existing files
     for fileName in (getFile(char, i) for i in range (numProcs)):
         os.remove(fileName)
         

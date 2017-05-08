@@ -7,9 +7,15 @@ from multiprocessing import Pool
 import itertools
 import prettyprint
 
-choices = string.ascii_uppercase
+choices = string.ascii_uppercase #override for different character sets
 
+def gen_strings_one_arg(args):
+    numStrings, lenString = args
+    return gen_strings(numStrings, lenString)
+  
 def gen_strings(numStrings, lenString=60):
+    #inner join creates a line
+    #outer join creates numStrings lines
     return ''.join((''.join(random.choice(choices) for _ in range(lenString)) + '\n') for x in range(numStrings))
 
 if __name__ == '__main__':    
@@ -30,7 +36,7 @@ if __name__ == '__main__':
         while (numStrings < totalStrings):
             s = ''.join([random.choice(choices) for _ in range(1024*1024)])
            
-            results = p.map(gen_strings,[1024*30 for _ in range(threads)])
+            results = p.map(gen_strings_one_arg,[(1024*30,stringLength) for _ in range(threads)])
             finalResult = ''.join(results)
             f.write(finalResult)
             numStrings += 1024*30*threads
