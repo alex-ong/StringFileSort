@@ -12,19 +12,41 @@ import prettyprint
 
 def sort_file_one_arg(arg):
     fileName,start_byte,num_bytes,procID = arg
-    sort_file(fileName,start_byte,num_bytes,procID)
+    return  sort_file(fileName,start_byte,num_bytes,procID)
     
 #override this function with something if you want it to be processed
 def process_string(input):
     #time.sleep(0.001)
     return input
     
+def calcPartitions(fileName, num_bytes):
+    result = []
+    byteCounter = 0
+    filesize = os.stat(fileName).st_size
+    result.append(byteCounter)
+    
+    with open(fileName, 'r') as f:
+        while byteCounter < filesize:
+            byteCounter += num_bytes            
+            f.seek(byteCounter)
+            char = f.read(1)        
+            while char != '\n' and char != '':
+                byteCounter += 1
+                char = f.read(1)
+            result.append(byteCounter)
+            
+    return result
+    
 def sort_file(fileName,start_byte,num_bytes,procID):
+    real_start_byte = 0
+    real_end_byte = start_byte+num_bytes
+    
     with open(fileName, 'r') as f:
         f.seek(start_byte)        
         tempStr = f.read(num_bytes)
         while not tempStr.endswith('\n'):
             char = f.read(1)
+            real_end_byte += 1
             if char == "":
                 break
             tempStr += char
@@ -41,8 +63,11 @@ def sort_file(fileName,start_byte,num_bytes,procID):
             
     allEntries = tempStr.split('\n')
     
+    real_start_byte = start_byte
     if cullFirst:
+        real_start_byte += len(allEntries[0])
         allEntries = allEntries[1:]
+        
         
     files = {}
     for char in choices:
@@ -57,12 +82,18 @@ def sort_file(fileName,start_byte,num_bytes,procID):
     for file in files.values():
         file.close()
         
+    return ([real_start_byte,real_end_byte], [start_byte, start_byte+num_bytes])
+        
 def sort_completed_one_arg(args):
     procID, char = args
     sort_completed(procID, char)
     
-def sort_completed(procID, char):         
-    f = open(getFile(char,procID), 'r')
+def sort_completed(procID, char):     
+    try:
+        f = open(getFile(char,procID), 'r')
+    except FileNotFoundError: #we didnt create a file
+        return
+        
     lines = f.readlines()
     lines.sort()
     f.close()
@@ -75,8 +106,13 @@ def getFile(char,procID):
 def merge_sorted(char, numProcs):
     files = []
     for i in range (numProcs):
-        f = open(getFile(char,i))
-        files.append(f)
+        try:
+            f = open(getFile(char,i))
+            files.append(f)
+        except FileNotFoundError: #file wasn't created
+            pass
+            
+        
     
     final = open(getFile(char,'_final'),'w')
     
@@ -88,8 +124,10 @@ def merge_sorted(char, numProcs):
     # then push pointer forward. Do this till files are exhausted.
     while len(files) > 0:        
         minimum = min(currentCmp) #grab smallest string
+        
         index = currentCmp.index(minimum)
-        final.write(minimum + '\n') #write out string
+        if len(minimum) != 0:
+            final.write(minimum + '\n') #write out string        
         
         # increment string pointers
         newValue = files[index].readline()
@@ -101,7 +139,10 @@ def merge_sorted(char, numProcs):
             currentCmp[index] = newValue.strip()
     # delete existing files
     for fileName in (getFile(char, i) for i in range (numProcs)):
-        os.remove(fileName)
+        try:
+            os.remove(fileName)
+        except:
+            pass
         
 def merge_final(char):
     final = open('sorted.blob','a+')
@@ -122,20 +163,26 @@ if __name__ == '__main__':
     threads = int(sys.argv[2])
     
     p = Pool(threads)
-    blockSize = 1024*1024*50
+    blockSize = 1024*1024*50 #50 megabytes
     fileName = 'rawblob.blob'
     filesize = os.stat(fileName).st_size 
     
     bytesDone = 0
-    while bytesDone < filesize:
-        allArgs = []
-        for i in range (threads):
-            args = (fileName,bytesDone, blockSize, i)
-            bytesDone += blockSize
-            allArgs.append(args)
-            
-        p.map(sort_file_one_arg, allArgs) 
-        prettyprint.printProgressBar(min(bytesDone,filesize), filesize, prefix = 'Phase 1/4:', suffix = 'Complete', length = 50)
+    partitions = calcPartitions(fileName, blockSize)    
+    i = 0
+    allArgs = []
+    for i in range(len(partitions)-1):
+        args = (fileName,partitions[i], partitions[i+1]-partitions[i], i%threads)
+        allArgs.append(args)
+    
+    numSections = len(allArgs)
+    while len(allArgs) > 0:
+        #run [threadcount] tasks
+        p.map(sort_file_one_arg, allArgs[:min(threads, len(allArgs))]) 
+        #remove tasks that are done
+        allArgs = allArgs[min(threads,len(allArgs)):]
+        
+        prettyprint.printProgressBar(numSections-len(allArgs), numSections, prefix = 'Phase 1/4:', suffix = 'Complete', length = 50)
     
     # do a sort on all the mini-files
     charIndex = 0
