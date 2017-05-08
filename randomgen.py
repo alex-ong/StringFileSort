@@ -28,5 +28,5 @@ if __name__ == '__main__':
             finalResult = ''.join(results)
             f.write(finalResult)
             numStrings += 1024*30*4
-            prettyprint.printProgressBar(numStrings, totalStrings, prefix = 'Progress:', suffix = 'Complete', length = 50)
+            prettyprint.printProgressBar(min(numStrings,totalStrings), totalStrings, prefix = 'Progress:', suffix = 'Complete', length = 50)
     print ("Complete, took " +str(time.time() - start) + "seconds")

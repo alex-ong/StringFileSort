@@ -111,26 +111,26 @@ if __name__ == '__main__':
             allArgs.append(args)
             
         p.map(sort_file_one_arg, allArgs) 
-        prettyprint.printProgressBar(bytesDone, filesize, prefix = 'Phase 1:', suffix = 'Complete', length = 50)
+        prettyprint.printProgressBar(min(bytesDone,filesize), filesize, prefix = 'Phase 1/4:', suffix = 'Complete', length = 50)
     
     # do a sort on all the mini-files
     charIndex = 0
     for char in choices:
         p.map(sort_completed_one_arg, ((i,char) for i in range(4)))
-        prettyprint.printProgressBar(charIndex, len(choices), prefix = 'Phase 2:', suffix = 'Complete', length = 50)
+        prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 2/4:', suffix = 'Complete', length = 50)
         charIndex += 1
     
     # now merge files
     charIndex = 0
-    for char in choices[1:]:
+    for char in choices:
         merge_sorted(char,4)
-        prettyprint.printProgressBar(charIndex, len(choices), prefix = 'Phase 3:', suffix = 'Complete', length = 50)
+        prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 3/4:', suffix = 'Complete', length = 50)
         charIndex += 1
         
     # final merge - one blob.
     charIndex = 0
     for char in choices:
         merge_final(char)
-        prettyprint.printProgressBar(charIndex, len(choices), prefix = 'Final Phase:', suffix = 'Complete', length = 50)
+        prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 4/4:', suffix = 'Complete', length = 50)
         charIndex += 1
     
