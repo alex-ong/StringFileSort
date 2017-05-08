@@ -21,26 +21,39 @@ def process_string(input):
     
 def sort_file(fileName,start_byte,num_bytes,procID):
     with open(fileName, 'r') as f:
-        f.seek(start_byte)
+        f.seek(start_byte)        
         tempStr = f.read(num_bytes)
         while not tempStr.endswith('\n'):
             char = f.read(1)
             if char == "":
                 break
-            tempStr += f.read(1)
+            tempStr += char
+
+        #cull first option unless it is perfect
+        cullFirst = True
+        if start_byte != 0:
+            f.seek(start_byte-1)
+            firstChar = f.read(1)
+            if firstChar == '\n':
+                cullFirst = False
+        else: #start_byte == 0
+            cullFirst = False
             
     allEntries = tempStr.split('\n')
     
+    if cullFirst:
+        allEntries = allEntries[1:]
+        
     files = {}
     for char in choices:
         f = open(getFile(char,procID), 'a+')
         files[char] = f
         
     for entry in allEntries:        
-        if len(entry) > 0:
-            newEntry = process_string(entry)
+        if len(entry) > 0 and len(entry.strip()) > 0:
+            newEntry = process_string(entry).strip()
             files[newEntry[0]].write(newEntry + '\n')        
-                
+        
     for file in files.values():
         file.close()
         
@@ -140,6 +153,7 @@ if __name__ == '__main__':
         
     # final merge - one blob.
     charIndex = 0
+    final = open('sorted.blob','w') #erase file
     for char in choices:
         merge_final(char)
         prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 4/4:', suffix = 'Complete', length = 50)
