@@ -94,6 +94,7 @@ def merge_final(char):
     
     final.close()
     merger.close()
+    os.remove(getFile(char,'_final'))
     
 if __name__ == '__main__':
     p = Pool(4)

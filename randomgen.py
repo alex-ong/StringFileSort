@@ -5,8 +5,7 @@ import sys
 
 from multiprocessing import Pool
 import itertools
-import prettyprint as printProgressBar
-
+import prettyprint
 
 choices = string.ascii_uppercase
 
@@ -14,7 +13,7 @@ def gen_strings(numStrings, lenString=60):
     return ''.join((''.join(random.choice(choices) for _ in range(lenString)) + '\n') for x in range(numStrings))
 
 if __name__ == '__main__':
-    gigs = 1    
+    gigs = 0.25    
     stringLength = 60
     totalStrings = int(gigs*1024*1024*1024 / (stringLength + 1))
     numStrings = 0
