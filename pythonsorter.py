@@ -1,4 +1,5 @@
 import string
+import sys
 from multiprocessing import Pool
 import os
 import time
@@ -97,7 +98,14 @@ def merge_final(char):
     os.remove(getFile(char,'_final'))
     
 if __name__ == '__main__':
-    p = Pool(4)
+    if len(sys.argv) < 3:
+        print ("usage: pythonsorter.py blob_file THREADS")
+        sys.exit()
+        
+    fileName = sys.argv[1]
+    threads = int(sys.argv[2])
+    
+    p = Pool(threads)
     blockSize = 1024*1024*50
     fileName = 'rawblob.blob'
     filesize = os.stat(fileName).st_size 
@@ -105,7 +113,7 @@ if __name__ == '__main__':
     bytesDone = 0
     while bytesDone < filesize:
         allArgs = []
-        for i in range (4):
+        for i in range (threads):
             args = (fileName,bytesDone, blockSize, i)
             bytesDone += blockSize
             allArgs.append(args)
@@ -116,14 +124,14 @@ if __name__ == '__main__':
     # do a sort on all the mini-files
     charIndex = 0
     for char in choices:
-        p.map(sort_completed_one_arg, ((i,char) for i in range(4)))
+        p.map(sort_completed_one_arg, ((i,char) for i in range(threads)))
         prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 2/4:', suffix = 'Complete', length = 50)
         charIndex += 1
     
     # now merge files
     charIndex = 0
     for char in choices:
-        merge_sorted(char,4)
+        merge_sorted(char,threads)
         prettyprint.printProgressBar(charIndex+1, len(choices), prefix = 'Phase 3/4:', suffix = 'Complete', length = 50)
         charIndex += 1
         
