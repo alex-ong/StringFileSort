@@ -40,7 +40,7 @@ if __name__ == '__main__':
         
     p = Pool(4)
     start = time.time()
-    with open('rawblob.txt', 'w') as f:
+    with open('rawblob.blob', 'w') as f:
         while (numStrings < totalStrings):
             s = ''.join([random.choice(choices) for _ in range(1024*1024)])
            
