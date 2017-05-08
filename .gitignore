@@ -1,2 +1,4 @@
 *.txt
 rawblob.blob
+__pycache__/
+sorted.blob
